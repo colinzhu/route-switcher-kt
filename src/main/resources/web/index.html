@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=yes">
+    <title>Route Switcher</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.7/dist/cdn.min.js"></script>
+    <script src="main.js"></script>
+    <style>
+        .no-underline a {
+          text-decoration: none
+        }
+        dialog article {
+            max-width: 1000px;
+        }
+        :root {
+            --pico-font-size: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container-fluid" x-data="{}">
+    <nav>
+        <ul>
+            <li>
+                <h1>Route Switcher</h1>
+            </li>
+        </ul>
+        <ul>
+            <li><a role="button" @click.prevent="$dispatch('addrecord')">Add Rule</a></li>
+            <li><a role="button" href="route-switcher/route-switcher.log" target="_blank">View Log File</a></li>
+            <li><a role="button" href="route-switcher/rules.json" target="_blank">View rules.json</a></li>
+        </ul>
+    </nav>
+</div>
+
+<article>💡 unique key: uriPrefix + fromIP </article>
+
+<!-- list of records -->
+<div class="overflow-auto" x-data="recordListData" x-init="loadRecords" @recordupdated.document="loadRecords">
+    <table class="striped">
+        <thead>
+        <tr>
+            <th scope="col">uriPrefix</th>
+            <th scope="col">fromIP</th>
+            <th scope="col">target</th>
+            <th scope="col">updateBy</th>
+            <th scope="col">updateTime</th>
+            <th scope="col">remark</th>
+            <th scope="col">action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="item in records">
+            <tr>
+                <td x-text="item.uriPrefix"></td>
+                <td x-text="item.fromIP"></td>
+                <td x-text="item.target"></td>
+                <td x-text="item.updateBy"></td>
+                <td x-html="new Date(item.updateTime).toLocaleString()"></td>
+                <td x-text="item.remark"></td>
+                <td class="no-underline">
+                    <a href="#" @click.prevent="$dispatch('updaterecord', item)">📝</a>
+                    <a href="#" @click.prevent="deleteRecord(item)">❎</a>
+                </td>
+            </tr>
+        </template>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- edit form -->
+<dialog x-data="recordFormData" x-bind:open="isEditing" @addrecord.document="showCreateForm"
+        @updaterecord.document="loadItemToUpdate($event.detail)">
+    <article x-transition>
+        <header>
+            <h3>Add / Update</h3>
+        </header>
+        <form method="post" @submit.prevent="submit" id="recordEditForm">
+            <label>* uriPrefix (e.g. /api/v1)
+                <input type="text" x-model="uriPrefix" required x-bind:disabled="isSubmitting" pattern="^/.*$"/>
+            </label>
+            <label>fromIP (e.g. 1.1.1.1,2.2.2.2)
+                <input type="text" x-model="fromIP" x-bind:disabled="isSubmitting" pattern="^(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?),)*((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"/>
+            </label>
+            <label>* target options split by comma (e.g. http://aaa.com:1234,https://bbb.com)
+                <input type="text" x-model="targetOptions" x-bind:disabled="isSubmitting" required />
+            </label>
+            <label x-show="targetOptions">* target (Host and port only. e.g. http://example.com:1234)
+                <select x-model="target" x-bind:disabled="isSubmitting" required pattern="(https?:\/\/[\w.\-]+(:\d{1,5})?,)*https?:\/\/[\w.\-]+(:\d{1,5})?$">
+                    <option value="">Please select</option>
+                    <template x-for="option in [...new Set(targetOptions.split(','))]" :key="option">
+                        <option x-text="option" x-bind:value="option.trim()"></option>
+                    </template>
+                </select>
+            </label>
+            <label>* updateBy
+                <input type="text" x-model="updateBy" x-bind:disabled="isSubmitting" required />
+            </label>
+            <label>remark
+                <input type="text" x-model="remark" x-bind:disabled="isSubmitting" />
+            </label>
+            <button x-bind:disabled="isSubmitting" x-bind:aria-busy="isSubmitting">Submit</button>
+            <button x-bind:disabled="isSubmitting" @click="cancel" type="reset">Cancel</button>
+        </form>
+    </article>
+</dialog>
+
+<div style="padding:1rem;font-size:0.8rem"><pre id="messages" style="white-space:pre-wrap"></pre></div>
+</body>
+
+</html>
