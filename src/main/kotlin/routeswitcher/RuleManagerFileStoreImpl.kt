@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Consumer
 
 
 internal class RuleManagerFileStoreImpl : RuleManager {
@@ -23,20 +22,11 @@ internal class RuleManagerFileStoreImpl : RuleManager {
     }
 
     private fun loadRules() {
-        try {
+        runCatching {
             val rulesStr = Files.readString(Path.of(RULES_FILE_NAME))
-            val array = JsonArray(rulesStr)
-            array.forEach(Consumer { entry: Any ->
-                rules.add(
-                    (entry as JsonObject).mapTo(
-                        Rule::class.java
-                    )
-                )
-            })
-        } catch (e: IOException) {
-            log.warn("no rules.json file found, use empty rules")
-        } catch (e: RuntimeException) {
-            log.error("fail to load rules from file", e)
+            JsonArray(rulesStr).forEach { rules.add((it as JsonObject).mapTo(Rule::class.java)) }
+        }.onFailure {
+            log.warn("no rules.json file found or failed to load rules, use empty rules")
         }
     }
 
@@ -52,6 +42,7 @@ internal class RuleManagerFileStoreImpl : RuleManager {
     override fun retrieveRules(): Set<Rule> {
         return rules
     }
+
     override fun addOrUpdate(rule: Rule): Future<Void> {
         rules.remove(rule)
         rules.add(rule)

@@ -35,79 +35,55 @@ class RouteSwitcherReverseVerticle : AbstractVerticle() {
     }
 
     private fun prepareDefaultRequestHandler(): Router {
-        val defaultRouter = Router.router(vertx)
-        defaultRouter.route().handler(StaticHandler.create("web"))
-        defaultRouter.route().handler(BodyHandler.create())
-        defaultRouter.route("/route-switcher/*").handler(StaticHandler.create("./"))
-        defaultRouter.route("/rule-manage/*").subRouter(RuleManageHandler(vertx, ruleManager).createRouter())
-        return defaultRouter
+        return Router.router(vertx).apply {
+            route().handler(StaticHandler.create("web"))
+            route().handler(BodyHandler.create())
+            route("/route-switcher/*").handler(StaticHandler.create("./"))
+            route("/rule-manage/*").subRouter(RuleManageHandler(vertx, ruleManager).createRouter())
+        }
     }
 
     private fun handleRequest(request: HttpServerRequest) {
-        val firstMatchedRule = getFirstMatchedRule(request)
-        if (firstMatchedRule.isEmpty) {
-            defaultRequestHandler.handle(request)
-            return
-        }
-        val targetServer = firstMatchedRule.get().target
-        if (targetServer.startsWith("https")) {
-            httpsProxy.handle(request)
-        } else {
-            httpProxy.handle(request)
-        }
+        getFirstMatchedRule(request)?.apply {
+            if (target.startsWith("https"))
+                httpsProxy.handle(request)
+            else
+                httpProxy.handle(request)
+        } ?: defaultRequestHandler.handle(request)
     }
 
     private fun prepareHttpProxy(isSsl: Boolean): HttpProxy {
         val httpClient = vertx.createHttpClient(HttpClientOptions().setSsl(isSsl))
-        val httpProxy = HttpProxy.reverseProxy(httpClient)
-        httpProxy.originRequestProvider(this::prepareTargetRequest)
-        return httpProxy
+        return HttpProxy.reverseProxy(httpClient).also { it.originRequestProvider(this::prepareTargetRequest) }
     }
 
     private fun prepareTargetRequest(serverRequest: HttpServerRequest, client: HttpClient): Future<HttpClientRequest?> {
         val firstMatchedRule = getFirstMatchedRule(serverRequest)
-        val targetServer = firstMatchedRule.get().target
+        val targetServer = firstMatchedRule!!.target
         val uuid = UUID.randomUUID().toString().split("-".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[4]
         val fromIP = serverRequest.remoteAddress().host()
         val method = serverRequest.method().name()
         val targetUrl = targetServer + serverRequest.uri()
-        log.info(
-            "request:  {} [{}] [{}] [{}] => {}",
-            uuid,
-            serverRequest.uri(),
-            fromIP,
-            method,
-            targetUrl
-        )
-        return client
-            .request(RequestOptions().setServer(getTargetSocketAddress(targetServer)))
-            .onSuccess { clientRequest: HttpClientRequest ->
+        log.info("request:  $uuid [${serverRequest.uri()}] [$fromIP] [$method] => $targetUrl")
+        return client.request(RequestOptions().setServer(getTargetSocketAddress(targetServer)))
+            .onSuccess { clientRequest ->
                 clientRequest.response()
-                    .onSuccess { response: HttpClientResponse ->
-                        log.info(
-                            "response: {} [{}]",
-                            uuid,
-                            response.statusCode()
-                        )
-                    }
-                    .onFailure { err: Throwable? -> log.error("error: {}", uuid, err) }
+                    .onSuccess { log.info("response: {} [{}]", uuid, it.statusCode()) }
+                    .onFailure { log.error("error: {}", uuid, it) }
             }
-            .onFailure { err: Throwable? -> log.error("error: {}", uuid, err) }
+            .onFailure { err -> log.error("error: {}", uuid, err) }
     }
 
-    private fun getFirstMatchedRule(serverRequest: HttpServerRequest): Optional<Rule> {
+    private fun getFirstMatchedRule(serverRequest: HttpServerRequest): Rule? {
         val uri = serverRequest.uri()
         val fromIP = serverRequest.remoteAddress().host()
 
-        return ruleManager.retrieveRules().stream()
-            .filter { entry ->
-                uri.startsWith(entry.uriPrefix) && entry.fromIP.split(",").contains(fromIP)
-            }
-            .findFirst()
-            .or {
-                ruleManager.retrieveRules().stream()
+        return ruleManager.retrieveRules()
+            .filter { uri.startsWith(it.uriPrefix) && it.fromIP.split(",").contains(fromIP) }
+            .getOrElse(0) {
+                ruleManager.retrieveRules()
                     .filter { entry -> uri.startsWith(entry.uriPrefix) && entry.fromIP.isEmpty() }
-                    .findFirst()
+                    .getOrNull(0)
             }
     }
 

@@ -12,6 +12,7 @@ data class Rule(
     val updateTime: Long,
     val remark: String? = null
 ) {
+    constructor(): this("", "", "", "", "", 0, null)
     override fun equals(other: Any?): Boolean {
         return other is Rule && uriPrefix == other.uriPrefix && fromIP == other.fromIP
     }

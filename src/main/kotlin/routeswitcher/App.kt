@@ -21,8 +21,7 @@ object App {
 
     private fun loadConfig(): JsonObject {
         return runCatching {
-            val rulesStr = Files.readString(Path.of(APP_CONFIG_FILE))
-            JsonObject(rulesStr)
+            JsonObject(Files.readString(Path.of(APP_CONFIG_FILE)))
         }.getOrElse {
             log.warn("no config.json file found, use random port")
             JsonObject().put("port", 0)

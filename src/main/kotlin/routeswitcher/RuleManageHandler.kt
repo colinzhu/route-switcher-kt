@@ -14,11 +14,11 @@ internal class RuleManageHandler(private val vertx: Vertx, private val ruleManag
     }
 
     fun createRouter(): Router {
-        val router = Router.router(vertx)
-        router.route(HttpMethod.GET, "/api/rules").handler { retrieveRules(it) }
-        router.route(HttpMethod.POST, "/api/rules").handler { addOrUpdateOneRule(it) }
-        router.route(HttpMethod.DELETE, "/api/rules").handler { deleteOneRule(it) }
-        return router
+        return Router.router(vertx).apply {
+            route(HttpMethod.GET, "/api/rules").handler { retrieveRules(it) }
+            route(HttpMethod.POST, "/api/rules").handler { addOrUpdateOneRule(it) }
+            route(HttpMethod.DELETE, "/api/rules").handler { deleteOneRule(it) }
+        }
     }
 
     private fun retrieveRules(routingContext: RoutingContext) {
