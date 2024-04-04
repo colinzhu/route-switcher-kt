@@ -1,9 +1,11 @@
 package routeswitcher
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Rule(
+internal data class Rule(
     val uriPrefix: String,
     val fromIP: String,
     val targetOptions: String,
@@ -12,6 +14,7 @@ data class Rule(
     val updateTime: Long,
     val remark: String? = null
 ) {
+    constructor(): this("", "", "", "", "", 0, null) // for jackson
     override fun equals(other: Any?): Boolean {
         return other is Rule && uriPrefix == other.uriPrefix && fromIP == other.fromIP
     }

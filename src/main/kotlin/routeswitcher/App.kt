@@ -1,8 +1,8 @@
 package routeswitcher
 
-import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.core.deploymentOptionsOf
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -15,14 +15,13 @@ object App {
     @JvmStatic
     fun main(args: Array<String>) {
         val vertx = Vertx.vertx()
-        vertx.deployVerticle(RouteSwitcherReverseVerticle::class.java, DeploymentOptions().setConfig(loadConfig()))
+        vertx.deployVerticle(RouteSwitcherVerticle::class.java, deploymentOptionsOf(config = loadConfig()))
             .onFailure {log.error(it.message, it)}
     }
 
     private fun loadConfig(): JsonObject {
         return runCatching {
-            val rulesStr = Files.readString(Path.of(APP_CONFIG_FILE))
-            JsonObject(rulesStr)
+            JsonObject(Files.readString(Path.of(APP_CONFIG_FILE)))
         }.getOrElse {
             log.warn("no config.json file found, use random port")
             JsonObject().put("port", 0)
