@@ -16,7 +16,7 @@ It is designed to route the network traffic to different destinations based on t
 To set up and run the application, you need to have Java and Maven installed. Then, you can clone the repository and run the application using Maven.
 
 ```bash
-git clone https://github.com/colinzhu/routeswitcher.git
+git clone https://github.com/colinzhu/route-switcher-kt.git
 cd routeswitcher
 # update config.json to set the port
 mvn clean install

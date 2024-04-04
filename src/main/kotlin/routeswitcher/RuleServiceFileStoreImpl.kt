@@ -4,10 +4,8 @@ import io.vertx.core.Future
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-
 
 internal class RuleServiceFileStoreImpl : RuleService {
     private val rules: MutableSet<Rule> = HashSet()
@@ -31,12 +29,7 @@ internal class RuleServiceFileStoreImpl : RuleService {
     }
 
     private fun persistRules() {
-        try {
-            Files.writeString(Path.of(RULES_FILE_NAME), Json.encodeToString(rules))
-        } catch (e: IOException) {
-            log.error("fail to save rules to file", e)
-            throw RuntimeException(e)
-        }
+        Files.writeString(Path.of(RULES_FILE_NAME), Json.encodeToString(rules))
     }
 
     override fun retrieveRules(): Set<Rule> {

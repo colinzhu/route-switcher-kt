@@ -15,7 +15,7 @@
 要设置和运行应用程序，您需要安装Java和Maven。然后，您可以克隆存储库并使用Maven运行应用程序。
 
 ```bash
-git clone https://github.com/colinzhu/routeswitcher.git
+git clone https://github.com/colinzhu/route-switcher-kt.git
 cd routeswitcher
 # 更新config.json以设置端口
 mvn clean install
