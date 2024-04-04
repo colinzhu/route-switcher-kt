@@ -51,10 +51,10 @@ internal class ProxyHandler(private val vertx: Vertx): Handler<HttpServerRequest
         return client.request(requestOptionsOf(server = getTargetSocketAddress(targetServer)))
             .onSuccess { clientRequest ->
                 clientRequest.response()
-                    .onSuccess { log.info("response: {} [{}]", uuid, it.statusCode()) }
-                    .onFailure { log.error("error: {}", uuid, it) }
+                    .onSuccess { log.info("response: $uuid [${it.statusCode()}]") }
+                    .onFailure { log.error("error: $uuid", it) }
             }
-            .onFailure { err -> log.error("error: {}", uuid, err) }
+            .onFailure { log.error("error: $uuid", it) }
     }
 
     fun findRule(serverRequest: HttpServerRequest): Rule? {
