@@ -21,7 +21,7 @@ class RouteSwitcherVerticle : AbstractVerticle() {
             .webSocketHandler(WebSocketHandler(vertx))
             .requestHandler { proxyHandler.findRule(it)?.run { proxyHandler.handle(it) } ?: defaultHandler.handle(it) }
             .listen(portNbr)
-            .onSuccess { log.info("reverse proxy server started at port: {}", it.actualPort()) }
+            .onSuccess { log.info("reverse proxy server started at port: ${it.actualPort()}") }
             .onFailure { log.error("error start reverse proxy server", it) }
     }
 
