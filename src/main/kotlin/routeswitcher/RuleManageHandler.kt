@@ -8,7 +8,8 @@ import io.vertx.ext.web.RoutingContext
 import org.slf4j.LoggerFactory
 
 
-internal class RuleManageHandler(private val vertx: Vertx, private val ruleManager: RuleManager) {
+internal class RuleManageHandler(private val vertx: Vertx) {
+    private val ruleService: RuleService = RuleServiceFileStoreImpl()
     companion object {
         private val log = LoggerFactory.getLogger(RuleManageHandler::class.java)
     }
@@ -23,15 +24,19 @@ internal class RuleManageHandler(private val vertx: Vertx, private val ruleManag
 
     private fun retrieveRules(routingContext: RoutingContext) {
         log.debug("get rules request body:{}", routingContext.body().asString())
-        routingContext.json(ruleManager.retrieveRules())
+        runCatching { ruleService.retrieveRules() }
+            .onSuccess { routingContext.json(it) }
+            .onFailure { routingContext.response().setStatusCode(500).end(Json.encode(mapOf("reason" to it.message))) }
     }
 
     private fun addOrUpdateOneRule(routingContext: RoutingContext) {
         log.debug("update one rule request body:{}", routingContext.body().asString())
+
         try {
             val rule = routingContext.body().asPojo(Rule::class.java)
-            ruleManager.addOrUpdate(rule).onSuccess { _ -> routingContext.json(ruleManager.retrieveRules()) }
+            ruleService.addOrUpdate(rule).onSuccess { _ -> routingContext.json(ruleService.retrieveRules()) }
         } catch (e: Exception) {
+            log.error("fail to add or update rule", e)
             routingContext.response().setStatusCode(500).end(Json.encode(mapOf("reason" to e.message)))
         }
     }
@@ -40,8 +45,9 @@ internal class RuleManageHandler(private val vertx: Vertx, private val ruleManag
         log.debug("delete one rule request body:{}", routingContext.body().asString())
         try {
             val rule = routingContext.body().asPojo(Rule::class.java)
-            ruleManager.delete(rule).onSuccess { _ -> routingContext.json(ruleManager.retrieveRules()) }
+            ruleService.delete(rule).onSuccess { _ -> routingContext.json(ruleService.retrieveRules()) }
         } catch (e: Exception) {
+            log.error("fail to delete rule", e)
             routingContext.response().setStatusCode(500).end(Json.encode(mapOf("reason" to e.message)))
         }
     }

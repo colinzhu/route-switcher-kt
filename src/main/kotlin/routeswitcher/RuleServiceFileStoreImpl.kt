@@ -1,19 +1,19 @@
 package routeswitcher
 
 import io.vertx.core.Future
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
 
-internal class RuleManagerFileStoreImpl : RuleManager {
+internal class RuleServiceFileStoreImpl : RuleService {
     private val rules: MutableSet<Rule> = HashSet()
 
     companion object {
-        private val log = LoggerFactory.getLogger(RuleManagerFileStoreImpl::class.java)
+        private val log = LoggerFactory.getLogger(RuleServiceFileStoreImpl::class.java)
         private const val RULES_FILE_NAME = "rules.json"
     }
 
@@ -24,15 +24,15 @@ internal class RuleManagerFileStoreImpl : RuleManager {
     private fun loadRules() {
         runCatching {
             val rulesStr = Files.readString(Path.of(RULES_FILE_NAME))
-            JsonArray(rulesStr).forEach { rules.add((it as JsonObject).mapTo(Rule::class.java)) }
+            Json.decodeFromString<Array<Rule>>(rulesStr).run { rules.addAll(toSet()) }
         }.onFailure {
-            log.warn("no rules.json file found or failed to load rules, use empty rules")
+            log.warn("no rules.json file found or failed to load rules, use empty rules", it)
         }
     }
 
     private fun persistRules() {
         try {
-            Files.writeString(Path.of(RULES_FILE_NAME), JsonArray(rules.stream().toList()).encodePrettily())
+            Files.writeString(Path.of(RULES_FILE_NAME), Json.encodeToString(rules))
         } catch (e: IOException) {
             log.error("fail to save rules to file", e)
             throw RuntimeException(e)
