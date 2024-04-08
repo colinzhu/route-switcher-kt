@@ -17,29 +17,29 @@ internal class RuleManageHandler(private val vertx: Vertx) {
 
     fun createRouter(): Router {
         return Router.router(vertx).apply {
-            route(HttpMethod.GET, "/api/rules").handler { retrieveRules(it) }
-            route(HttpMethod.POST, "/api/rules").handler { addOrUpdateOneRule(it) }
-            route(HttpMethod.DELETE, "/api/rules").handler { deleteOneRule(it) }
+            route(HttpMethod.GET, "/api/rules").handler(::retrieveRules)
+            route(HttpMethod.POST, "/api/rules").handler(::addOrUpdateOneRule)
+            route(HttpMethod.DELETE, "/api/rules").handler(::deleteOneRule)
         }
     }
 
     private fun retrieveRules(ctx: RoutingContext) {
         runCatching { ruleService.retrieveRules() }
-            .onSuccess { ctx.json(it) }
+            .onSuccess(ctx::json)
             .onFailure { handleThrowable(ctx, it) }
     }
 
     private fun addOrUpdateOneRule(ctx: RoutingContext) {
         log.info("update one rule request body:{}", ctx.body().asString())
-        handleOneRule(ctx) { ruleService.addOrUpdate(it) }
+        handleOneRule(ctx, ruleService::addOrUpdate)
     }
 
     private fun deleteOneRule(ctx: RoutingContext) {
         log.info("delete one rule request body:{}", ctx.body().asString())
-        handleOneRule(ctx) { ruleService.delete(it) }
+        handleOneRule(ctx, ruleService::delete)
     }
 
-    private fun handleOneRule(ctx: RoutingContext, ruleHandler: (Rule) -> Future<Void>) {
+    private inline fun handleOneRule(ctx: RoutingContext, ruleHandler: (Rule) -> Future<Void>) {
         runCatching {
             ruleHandler.invoke(ctx.body().asPojo(Rule::class.java))
                 .onSuccess { ctx.json(ruleService.retrieveRules()) }
