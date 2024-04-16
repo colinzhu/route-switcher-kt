@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
 
-internal class ProxyHandler(private val vertx: Vertx): Handler<HttpServerRequest>{
+internal class ProxyHandler(private val vertx: Vertx) : Handler<HttpServerRequest> {
     private val httpProxy: HttpProxy
     private val httpsProxy: HttpProxy
     private val ruleService: RuleService = RuleServiceFileStoreImpl()
