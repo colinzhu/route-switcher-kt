@@ -12,6 +12,7 @@ internal class WebSocketHandler(private val vertx: Vertx) : Handler<ServerWebSoc
     companion object {
         private val log = org.slf4j.LoggerFactory.getLogger(WebSocketHandler::class.java)
     }
+
     init {
         redirectStdOutToWeb()
     }

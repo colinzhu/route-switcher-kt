@@ -1,6 +1,7 @@
 package routeswitcher
 
 import io.vertx.core.AbstractVerticle
+import io.vertx.core.Promise
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.StaticHandler
@@ -12,7 +13,7 @@ class RouteSwitcherVerticle : AbstractVerticle() {
         private val log = LoggerFactory.getLogger(RouteSwitcherVerticle::class.java)
     }
 
-    override fun start() {
+    override fun start(promise: Promise<Void>) {
         val defaultHandler = staticAndRuleManageHandler()
         val proxyHandler = ProxyHandler(vertx)
 
@@ -21,8 +22,11 @@ class RouteSwitcherVerticle : AbstractVerticle() {
             .webSocketHandler(WebSocketHandler(vertx))
             .requestHandler { proxyHandler.findRule(it)?.run { proxyHandler.handle(it) } ?: defaultHandler.handle(it) }
             .listen(portNbr)
-            .onSuccess { log.info("reverse proxy server started at port: ${it.actualPort()}") }
-            .onFailure { log.error("error start reverse proxy server", it) }
+            .onSuccess {
+                log.info("reverse proxy server started at port: ${it.actualPort()}")
+                promise.complete()
+            }
+            .onFailure { promise.fail("error start reverse proxy server, " + it.message) }
     }
 
     private fun staticAndRuleManageHandler(): Router {

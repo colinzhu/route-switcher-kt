@@ -15,8 +15,6 @@
 要设置和运行应用程序，您需要安装Java和Maven。然后，您可以克隆存储库并使用Maven运行应用程序。
 
 ```bash
-git clone https://github.com/colinzhu/route-switcher-kt.git
-cd routeswitcher
 # 更新config.json以设置端口
 mvn clean install
 mvn exec:java
@@ -28,4 +26,5 @@ mvn exec:java
 
 一旦应用程序运行起来，您可以打开浏览器并导航到`http://localhost:<port>`来访问路由切换器界面。在这里，您可以管理您的路由规则。
 
-每个规则都由一个`uriPrefix`和一个`target`组成。`uriPrefix`是规则应匹配的URI的开头，`target`是应将匹配`uriPrefix`的请求路由到的服务器。
+每个规则都由一个`uriPrefix`和一个`target`组成。`uriPrefix`是规则应匹配的URI的开头，`target`是应将匹配`uriPrefix`
+的请求路由到的服务器。

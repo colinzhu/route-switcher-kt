@@ -1,1 +1,20 @@
-[{"uriPrefix":"/get","fromIP":"","targetOptions":"https://httpbin.org,http://httpbin.org","target":"http://httpbin.org","updateBy":"colin","updateTime":1711723804184,"remark":""},{"uriPrefix":"/get","fromIP":"127.0.0.1,127.0.0.2","targetOptions":"http://httpbin.org,https://httpbin.org","target":"http://httpbin.org","updateBy":"test","updateTime":1712243195321,"remark":"test"}]
+[
+  {
+    "uriPrefix": "/get",
+    "fromIP": "",
+    "targetOptions": "https://httpbin.org,http://httpbin.org",
+    "target": "http://httpbin.org",
+    "updateBy": "colin",
+    "updateTime": 1711723804184,
+    "remark": ""
+  },
+  {
+    "uriPrefix": "/get",
+    "fromIP": "127.0.0.1,127.0.0.2",
+    "targetOptions": "http://httpbin.org,https://httpbin.org",
+    "target": "http://httpbin.org",
+    "updateBy": "test",
+    "updateTime": 1712243195321,
+    "remark": "test"
+  }
+]

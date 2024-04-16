@@ -6,6 +6,7 @@ import io.vertx.kotlin.core.deploymentOptionsOf
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.system.exitProcess
 
 
 object App {
@@ -16,7 +17,10 @@ object App {
     fun main(args: Array<String>) {
         val vertx = Vertx.vertx()
         vertx.deployVerticle(RouteSwitcherVerticle::class.java, deploymentOptionsOf(config = loadConfig()))
-            .onFailure {log.error(it.message, it)}
+            .onFailure {
+                log.error(it.message, it)
+                exitProcess(1)
+            }
     }
 
     private fun loadConfig(): JsonObject {
